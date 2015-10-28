@@ -28,12 +28,8 @@ config = dict(
         "__main__.%s" % hostname: [
             "tcp://127.0.0.1:4324",
         ],
-        "bugfiler.%s" % hostname:[
+        "bugyou.%s" % hostname:[
             "tcp://127.0.0.1:4400",
-        ],
-        "autocloud.%s" % hostname: [
-            "tcp://127.0.0.1:4322",
-            "tcp://127.0.0.1:4323",
         ],
     },
 )

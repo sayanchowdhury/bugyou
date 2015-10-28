@@ -5,14 +5,14 @@ requires = [
 ]
 
 setup(
-    name='bugfiler',
+    name='bugyou',
     version='0.1',
     description='',
     author='',
     author_email='',
     url='https://github.com/kushaldas/autocloud',
     install_requires=requires,
-    packages=['bugfiler.utils'],
+    packages=[],
     include_package_data=True,
     zip_safe=False,
     classifiers=[
@@ -23,7 +23,7 @@ setup(
     ],
     entry_points={
         'moksha.consumer': [
-            "bugfiler_consumer = bugfiler.consumer:BugFilerConsumer",
+            "bugyou_consumer = bugyou.consumer:BugFilerConsumer",
         ],
    },
 )

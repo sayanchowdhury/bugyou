@@ -3,40 +3,26 @@
 import fedmsg.consumers
 import koji
 
-import bugfiler
-
 import logging
 log = logging.getLogger("fedmsg")
 
 DEBUG = True
 
 
-class BugFilerConsumer(fedmsg.consumers.FedmsgConsumer):
+class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
 
-    # if DEBUG:
-    #     topic = ['org.fedoraproject.dev.__main__.autocloud.image.aborted',
-    #              'org.fedoraproject.dev.__main__.autocloud.image.failed',]
-    # else:
-    #     topic = ['org.fedoraproject.prod.autocloud.image.aborted',
-    #              'org.fedoraproject.dev.autocloud.image.failed',]
-    if DEBUG:
-        topic =  ['org.fedoraproject.dev.autocloud.image.aborted',
-                'org.fedoraproject.dev.autocloud.image.failed']
-    else:
-        topic = ['org.fedoraproject.prod.autocloud.image.aborted',
-                'org.fedoraproject.prod.autocloud.image.failed']
+    topic = ['org.fedoraproject.dev.__main__.autocloud.image.success',
+             'org.fedoraproject.dev.__main__.autocloud.image.failed']
 
-
-    config_key = 'bugfiler.consumer.enabled'
+    config_key = 'bugyou.consumer.enabled'
 
     def __init__(self, *args, **kwargs):
-        super(BugFilerConsumer, self).__init__(*args, **kwargs)
-
-    def _get_tasks(self, builds):
-        print "task done"
+        super(BugyouConsumer, self).__init__(*args, **kwargs)
 
     def consume(self, msg):
         """ This is called when we receive a message matching the topic. """
+
+        from ipdb import set_trace;set_trace()
 
         builds = list()  # These will be the Koji build IDs to upload, if any.
 
