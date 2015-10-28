@@ -23,7 +23,7 @@ setup(
     ],
     entry_points={
         'moksha.consumer': [
-            "bugyou_consumer = bugyou.consumer:BugFilerConsumer",
+            "bugyou_consumer = bugyou.consumer:BugyouConsumer",
         ],
    },
 )

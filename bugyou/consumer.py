@@ -22,11 +22,11 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
     def consume(self, msg):
         """ This is called when we receive a message matching the topic. """
 
-        from ipdb import set_trace;set_trace()
+        #from ipdb import set_trace;set_trace()
 
         builds = list()  # These will be the Koji build IDs to upload, if any.
 
-        msg_info = msg["body"]["msg"]["info"]
+        msg_info = msg["body"]["msg"]
         print 'Received %r %r'%(msg['topic'], msg['body']['msg_id'])
 
         log.info('Received by bugfiler %r %r' % (msg['topic'], msg['body']['msg_id']))
