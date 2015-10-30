@@ -16,7 +16,7 @@ The output can be seen here - {output_url}
 
 class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
 
-    topic = 'org.fedoraproject.dev.__main__.autocloud.image.success'
+    topic = 'org.fedoraproject.dev.__main__.autocloud.image.failed'
     config_key = 'bugyou.consumer.enabled'
 
     def __init__(self, *args, **kwargs):
@@ -50,7 +50,7 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
         """
         return self.project.list_issues()
 
-    def _create_issue(self, title):
+    def _create_issue(self, title, content):
 
         try:
             self.project.create_issue(title=title,
@@ -75,9 +75,9 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
         issue_titles = self._get_issue_titles(issues)
 
         msg_info = msg['body']['msg']
+        topic = msg['body']['topic']
         image_name = msg_info['image_name']
         release = msg_info['release']
-        topic = msg_info['topic']
         job_id = msg_info['job_id']
 
         lookup_key = self.lookup_key_tmpl.format(image_name=image_name,
@@ -86,7 +86,7 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
 
         if 'failed' in topic:
             output_url = ("https://apps.fedoraproject.org/autocloud/jobs/"
-                            "{task_id}/output".format(job_id=job_id))
+                            "{job_id}/output".format(job_id=job_id))
             content = ISSUE_CONTENT_TEMPLATE.format(image_name=image_name,
                                                     release=release,
                                                     output_url=output_url)
@@ -97,5 +97,4 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
                                            content=content)
             else:
                 self._create_issue(title=lookup_key,
-                                   content=content,
-                                   job_id=job_id)
+                                   content=content)
