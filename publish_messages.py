@@ -4,7 +4,7 @@ import fedmsg
 import time
 
 count = 0
-with open('fixtures.json', 'r') as infile:
+with open('fixtures1.json', 'r') as infile:
     raw_messages= json.load(infile)
     for count,raw_message in enumerate(raw_messages):
         number = random.randint(1, 11)

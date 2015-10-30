@@ -107,5 +107,8 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
                 self._create_issue(title=lookup_key, content=content)
 
         if 'success' in topic:
-            if lookup_key_exits:
+            if lookup_key_exists:
+                matched_issue = (issue for issue in issues if issue["title"] == lookup_key).next()
+                issue_id = matched_issue["id"]
+
                 self._close_issue(issue_id=issue_id)
