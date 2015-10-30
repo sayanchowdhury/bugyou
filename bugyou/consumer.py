@@ -14,6 +14,7 @@ The image {image_name} for the release - {release} failed.
 The output can be seen here - {output_url}
 """
 
+
 class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
 
     topic = ['org.fedoraproject.dev.__main__.autocloud.image.failed',
@@ -36,7 +37,7 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
     def load_config(self):
         name = '/etc/bugyou/bugyou.cfg'
         if not os.path.exists(name):
-            raise Exception('Please add a proper cofig file under /etc/bugyou/')
+            raise Exception('Please add a proper cofig file under /etc/bugyou')
 
         self.config = ConfigParser.RawConfigParser()
         self.config.read(name)
@@ -60,10 +61,10 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
         except:
             pass
 
-    def _close_issue(self, issue_id, new_status):
+    def _close_issue(self, issue_id):
         try:
             self.project.change_issue_status(issue_id=issue_id,
-                                            new_status=new_status)
+                                             new_status="Fixed")
         except:
             pass
 
@@ -73,8 +74,6 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
                                        body=content)
         except:
             pass
-
-
 
     def consume(self, msg):
         """ This is called when we receive a message matching the topic. """
@@ -92,7 +91,7 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
                                                  release=release)
         lookup_key_exists = lookup_key in issue_titles
         # log.info(topic)
-        if 'failed' in topic or 'success' in topic:
+        if 'failed' in topic:
             output_url = ("https://apps.fedoraproject.org/autocloud/jobs/"
                             "{job_id}/output".format(job_id=job_id))
             content = ISSUE_CONTENT_TEMPLATE.format(image_name=image_name,
@@ -101,17 +100,12 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
             if lookup_key_exists:
                 matched_issue = (issue for issue in issues if issue["title"] == lookup_key).next()
                 issue_id = matched_issue["id"]
-            
-                if 'failed' in topic:
-                    # log.info('update')
-                    self._update_issue_comment(issue_id=issue_id,
-                                               content=content)
-                elif 'success' in topic:
-                    # log.info('success')
-                    self._close_issue(issue_id=issue_id,new_status='closed')
+
+                self._update_issue_comment(issue_id=issue_id,
+                                            content=content)
             elif 'failed' in topic:
-                # log.info('create')
-                self._create_issue(title=lookup_key,
-                                   content=content)
+                self._create_issue(title=lookup_key, content=content)
 
-
+        if 'success' in topic:
+            if lookup_key_exits:
+                self._close_issue(issue_id=issue_id)
