@@ -50,19 +50,23 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
         """
         return self.project.list_issues()
 
-    def _create_issue(self, title, image_name, release, job_id):
-        output_url = ("https://apps.fedoraproject.org/autocloud/jobs/"
-                           "{task_id}/output".format(job_id=job_id))
+    def _create_issue(self, title):
 
-        content = ISSUE_CONTENT_TEMPLATE.format(image_name=image_name,
-                                                release=release,
-                                                output_url=output_url)
         try:
             self.project.create_issue(title=title,
                                       content=content,
                                       private=False)
         except:
             pass
+
+    def _update_issue_comment(self, issue_id, content):
+        try:
+            self.project.comment_issue(issue_id=issue_id,
+                                       body=content)
+        except:
+            pass
+
+
 
     def consume(self, msg):
         """ This is called when we receive a message matching the topic. """
@@ -81,10 +85,17 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
         lookup_key_exists = lookup_key in issue_titles
 
         if 'failed' in topic:
+            output_url = ("https://apps.fedoraproject.org/autocloud/jobs/"
+                            "{task_id}/output".format(job_id=job_id))
+            content = ISSUE_CONTENT_TEMPLATE.format(image_name=image_name,
+                                                    release=release,
+                                                    output_url=output_url)
             if lookup_key_exists:
-                self._update_issue_comment()
+                matched_issue = (issue for issue in issues if issue["title"] == lookup_key).next()
+                issue_id = matched_issue["id"]
+                self._update_issue_comment(issue_id=issue_id,
+                                           content=content)
             else:
                 self._create_issue(title=lookup_key,
-                                   image_name=image_name,
-                                   release=release,
+                                   content=content,
                                    job_id=job_id)
