@@ -16,7 +16,8 @@ The output can be seen here - {output_url}
 
 class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
 
-    topic = 'org.fedoraproject.dev.__main__.autocloud.image.failed'
+    topic = ['org.fedoraproject.dev.__main__.autocloud.image.failed',
+             'org.fedoraproject.dev.__main__.autocloud.image.success']
     config_key = 'bugyou.consumer.enabled'
 
     def __init__(self, *args, **kwargs):
@@ -59,6 +60,13 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
         except:
             pass
 
+    def _close_issue(self, issue_id, new_status):
+        try:
+            self.project.change_issue_status(issue_id=issue_id,
+                                            new_status=new_status)
+        except:
+            pass
+
     def _update_issue_comment(self, issue_id, content):
         try:
             self.project.comment_issue(issue_id=issue_id,
@@ -83,8 +91,8 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
         lookup_key = self.lookup_key_tmpl.format(image_name=image_name,
                                                  release=release)
         lookup_key_exists = lookup_key in issue_titles
-
-        if 'failed' in topic:
+        # log.info(topic)
+        if 'failed' in topic or 'success' in topic:
             output_url = ("https://apps.fedoraproject.org/autocloud/jobs/"
                             "{job_id}/output".format(job_id=job_id))
             content = ISSUE_CONTENT_TEMPLATE.format(image_name=image_name,
@@ -93,8 +101,17 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
             if lookup_key_exists:
                 matched_issue = (issue for issue in issues if issue["title"] == lookup_key).next()
                 issue_id = matched_issue["id"]
-                self._update_issue_comment(issue_id=issue_id,
-                                           content=content)
-            else:
+            
+                if 'failed' in topic:
+                    # log.info('update')
+                    self._update_issue_comment(issue_id=issue_id,
+                                               content=content)
+                elif 'success' in topic:
+                    # log.info('success')
+                    self._close_issue(issue_id=issue_id,new_status='closed')
+            elif 'failed' in topic:
+                # log.info('create')
                 self._create_issue(title=lookup_key,
                                    content=content)
+
+
