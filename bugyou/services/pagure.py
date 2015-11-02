@@ -20,7 +20,7 @@ class PagureService(object):
 
     def close_issue(self, issue_id):
         try:
-            self.project.comment_issue(issue_id=issue_id,
-                                       body=content)
+            self.project.change_issue_status(issue_id=issue_id,
+                                             body=content)
         except:
             pass
