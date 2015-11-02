@@ -25,5 +25,8 @@ setup(
         'moksha.consumer': [
             "bugyou_consumer = bugyou.consumer:BugyouConsumer",
         ],
+        'bugyou.service': [
+            "pagure=bugyou.services.pagure:PagureService"
+        ],
    },
 )
