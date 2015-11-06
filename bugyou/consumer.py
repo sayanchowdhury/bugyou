@@ -19,7 +19,6 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
 
     topic = ['org.fedoraproject.dev.__main__.autocloud.image.failed',
              'org.fedoraproject.dev.__main__.autocloud.image.success']
-
     config_key = 'bugyou.consumer.enabled'
 
     def __init__(self, *args, **kwargs):
