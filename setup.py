@@ -11,7 +11,7 @@ setup(
     author='Sayan Chowdhury',
     author_email='sayanchowdhury@fedoraproject.org',
     url='https://pagure.io/bugyou',
-    license='GPLv3'
+    license='GPLv3',
     install_requires=requires,
     packages=find_packages(),
     include_package_data=True,
