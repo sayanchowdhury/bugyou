@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 requires = [
     'fedmsg',
@@ -7,12 +7,13 @@ requires = [
 setup(
     name='bugyou',
     version='0.1',
-    description='',
-    author='',
-    author_email='',
-    url='https://github.com/kushaldas/autocloud',
+    description='Automated Bug Reporting Tool',
+    author='Sayan Chowdhury',
+    author_email='sayanchowdhury@fedoraproject.org',
+    url='https://pagure.io/bugyou',
+    license='GPLv3'
     install_requires=requires,
-    packages=[],
+    packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
     classifiers=[

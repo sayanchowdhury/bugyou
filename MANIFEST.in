@@ -1,0 +1,5 @@
+include README.md
+include fedmsg.d/bugyou.py
+include config/bugyou.cfg
+include LICENSE
+include bugyou.service
