@@ -7,7 +7,7 @@
         "msg_id":"2015-655a3bb3-3257-4db8-aa1b-8f81dd707dfd",
         "topic":"org.fedoraproject.prod.autocloud.image.failed",
         "msg":{
-            "status":"success",
+            "status":"failed",
             "job_id":186,
             "buildid":11381551,
             "image_name":"Fedora-Cloud-Base",
@@ -25,7 +25,7 @@
         "msg_id":"2015-655a3bb3-3257-4db8-aa1b-8f81dd707dfd",
         "topic":"org.fedoraproject.prod.autocloud.image.failed",
         "msg":{
-            "status":"success",
+            "status":"failed",
             "job_id":186,
             "buildid":11381551,
             "image_name":"Fedora-Cloud-Base",
