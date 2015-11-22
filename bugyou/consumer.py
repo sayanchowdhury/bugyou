@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
 
+#python core imports
 import ConfigParser
-import libpagure
 import os
+from multiprocessing import Process,Manager
 
+#3rd party packages import
 import fedmsg.consumers
+from retask import Task
+from retask import Queue
 
+# logging
 import logging
 log = logging.getLogger("fedmsg")
 
@@ -17,8 +22,7 @@ The output can be seen here - {output_url}
 
 class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
 
-    topic = ['org.fedoraproject.dev.__main__.autocloud.image.failed',
-             'org.fedoraproject.dev.__main__.autocloud.image.success']
+    topic = ['*']
     config_key = 'bugyou.consumer.enabled'
 
     def __init__(self, *args, **kwargs):
@@ -26,13 +30,9 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
 
         self.load_config()
 
-        self.access_token = self.config.get('general', 'access_token')
-        self.repo_name = self.config.get('general', 'repo_name')
-
-        self.project = libpagure.Pagure(pagure_token=self.access_token,
-                                        pagure_repository=self.repo_name)
-
-        self.lookup_key_tmpl = "{image_name}-{release}"
+        self.plugin_list = list()
+        self.served_topic = set()
+        self.start_listener()
 
     def load_config(self):
         name = '/etc/bugyou/bugyou.cfg'
@@ -75,40 +75,45 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
         except:
             pass
 
+    def start_listener(self):
+        """ Thi method creates a process for listening to "instruction" queue"""
+        manager = Manager()
+        self.passing_data = manager.dict({'plugin_list': self.plugin_list , 'served_topic': self.served_topic})
+        proc = Process(target=self.listen_for_instruction,args=(self.passing_data,))
+        proc.start()
+
+
+    @staticmethod
+    def listen_for_instruction(data):
+        """ This method listens to instruction queue"""
+        queue = Queue('instruction')
+        queue.connect()
+        while True:
+            task = queue.wait()
+            if task.data['type'] == 'create':
+                plugin_queue = task.data['queue_name']
+
+                if plugin_queue not in data['plugin_list']:
+
+                    plugin_list = list(data['plugin_list'])
+                    plugin_list.append(plugin_queue)
+                    data['plugin_list'] = plugin_list
+
+                    topics = list(data['served_topic'])
+                    topics.extend(task.data['topic'])
+                    data['served_topic'] = set(topics)
+
     def consume(self, msg):
         """ This is called when we receive a message matching the topic. """
 
-        issues = self._get_issues()
-        issue_titles = self._get_issue_titles(issues)
-
-        msg_info = msg['body']['msg']
+        self.served_topic = self.passing_data['served_topic']
+        self.plugin_list = self.passing_data['plugin_list']
         topic = msg['body']['topic']
-        image_name = msg_info['image_name']
-        release = msg_info['release']
-        job_id = msg_info['job_id']
 
-        lookup_key = self.lookup_key_tmpl.format(image_name=image_name,
-                                                 release=release)
-        lookup_key_exists = lookup_key in issue_titles
-        # log.info(topic)
-        if 'failed' in topic:
-            output_url = ("https://apps.fedoraproject.org/autocloud/jobs/"
-                            "{job_id}/output".format(job_id=job_id))
-            content = ISSUE_CONTENT_TEMPLATE.format(image_name=image_name,
-                                                    release=release,
-                                                    output_url=output_url)
-            if lookup_key_exists:
-                matched_issue = (issue for issue in issues if issue["title"] == lookup_key).next()
-                issue_id = matched_issue["id"]
-
-                self._update_issue_comment(issue_id=issue_id,
-                                            content=content)
-            elif 'failed' in topic:
-                self._create_issue(title=lookup_key, content=content)
-
-        if 'success' in topic:
-            if lookup_key_exists:
-                matched_issue = (issue for issue in issues if issue["title"] == lookup_key).next()
-                issue_id = matched_issue["id"]
-
-                self._close_issue(issue_id=issue_id)
+        if topic in self.served_topic:
+            for plugin in self.plugin_list:
+                queue = Queue(plugin)
+                data = {'topic': topic, 'msg': msg['body']['msg'] }
+                task = Task(data)
+                queue.connect()
+                queue.enqueue(task)
