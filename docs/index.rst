@@ -16,9 +16,9 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-    building
-    setup
-    design
+   building
+   setup
+   design
 
 
 
