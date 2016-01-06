@@ -50,6 +50,7 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
     def _get_issues(self):
         """ Pull all the issues for a repo in Pagure
         """
+        log.info('Fetching all the issues for a repo in Pagure')
         return self.project.list_issues()
 
     def _create_issue(self, title, content):
@@ -58,22 +59,25 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
             self.project.create_issue(title=title,
                                       content=content,
                                       private=False)
+            log.info('Issue successfully created: %s' % title)
         except:
-            pass
+            log.info('There was some error creating the issue: %s' % title)
 
     def _close_issue(self, issue_id):
         try:
             self.project.change_issue_status(issue_id=issue_id,
                                              new_status="Fixed")
+            log.info('Issue successfully closed: %s' % title)
         except:
-            pass
+            log.info('There was some error closing the issue: %s' % title)
 
     def _update_issue_comment(self, issue_id, content):
         try:
             self.project.comment_issue(issue_id=issue_id,
                                        body=content)
+            log.info('Issue successfully updated: %s' % title)
         except:
-            pass
+            log.info('There was some error updating the issue: %s' % title)
 
     def consume(self, msg):
         """ This is called when we receive a message matching the topic. """
@@ -89,9 +93,10 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
 
         lookup_key = self.lookup_key_tmpl.format(image_name=image_name,
                                                  release=release)
+
         lookup_key_exists = lookup_key in issue_titles
-        # log.info(topic)
         if 'failed' in topic:
+            log.info("Received a failed image message with job_id: %s" % job_id)
             output_url = ("https://apps.fedoraproject.org/autocloud/jobs/"
                             "{job_id}/output".format(job_id=job_id))
             content = ISSUE_CONTENT_TEMPLATE.format(image_name=image_name,
@@ -101,14 +106,17 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
                 matched_issue = (issue for issue in issues if issue["title"] == lookup_key).next()
                 issue_id = matched_issue["id"]
 
+                log.info("Updating issue with issue_id: %s" % issue_id)
                 self._update_issue_comment(issue_id=issue_id,
                                             content=content)
             elif 'failed' in topic:
                 self._create_issue(title=lookup_key, content=content)
 
         if 'success' in topic:
+            log.info("Received a success image message with job_id: %s" % job_id)
             if lookup_key_exists:
                 matched_issue = (issue for issue in issues if issue["title"] == lookup_key).next()
                 issue_id = matched_issue["id"]
 
+                log.info("Closing issue with issue_id: %s" % issue_id)
                 self._close_issue(issue_id=issue_id)
