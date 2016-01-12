@@ -101,7 +101,7 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
 
                 if plugin_queue not in data['plugin_list']:
 
-                    plugin_list = list(data['plugin_list'])
+                    plugin_list = data['plugin_list']
                     plugin_list.append(plugin_queue)
                     data['plugin_list'] = plugin_list
 
@@ -111,7 +111,7 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
 
     def consume(self, msg):
         """
-         This is called when we receive a message matching the topic. 
+         This is called when we receive a message matching the topic.
         """
 
         self.served_topic = self.passing_data['served_topic']
