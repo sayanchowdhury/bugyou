@@ -104,7 +104,7 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
 
                 if plugin_queue not in data['plugin_list']:
 
-                    plugin_list = list(data['plugin_list'])
+                    plugin_list = data['plugin_list']
                     plugin_list.append(plugin_queue)
                     data['plugin_list'] = plugin_list
 
