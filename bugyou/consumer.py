@@ -42,43 +42,8 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
         self.config = ConfigParser.RawConfigParser()
         self.config.read(name)
 
-    def _get_issue_titles(self, issues):
-        """
-         Returns a set of all the issue title
-        """
-        return {issue['title'] for issue in issues}
-
-    def _get_issues(self):
-        """
-         Pull all the issues for a repo in Pagure
-        """
-        return self.project.list_issues()
-
-    def _create_issue(self, title, content):
-
-        try:
-            self.project.create_issue(title=title,
-                                      content=content,
-                                      private=False)
-        except:
-            pass
-
-    def _close_issue(self, issue_id):
-        try:
-            self.project.change_issue_status(issue_id=issue_id,
-                                             new_status="Fixed")
-        except:
-            pass
-
-    def _update_issue_comment(self, issue_id, content):
-        try:
-            self.project.comment_issue(issue_id=issue_id, body=content)
-        except:
-            pass
-
     def start_listener(self):
-        """
-         Thi method creates a process for listening to "instruction" queue
+        """ This method creates a process for listening to "instruction" queue
         """
         manager = Manager()
         self.passing_data = manager.dict({'plugin_list': self.plugin_list,
@@ -89,8 +54,7 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
 
     @staticmethod
     def listen_for_instruction(data):
-        """
-         This method listens to instruction queue
+        """ This method listens to instruction queue
         """
         queue = Queue('instruction')
         queue.connect()
@@ -110,8 +74,7 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
                     data['served_topic'] = set(topics)
 
     def consume(self, msg):
-        """
-         This is called when we receive a message matching the topic.
+        """ This is called when we receive a message matching the topic.
         """
 
         self.served_topic = self.passing_data['served_topic']
@@ -120,8 +83,13 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
 
         if topic in self.served_topic:
             for plugin in self.plugin_list:
-                queue = Queue(plugin)
-                data = {'topic': topic, 'msg': msg['body']['msg']}
-                task = Task(data)
-                queue.connect()
-                queue.enqueue(task)
+                queue_attr = 'queue-%s' % plugin
+                data = {'topic': topic, 'msg': msg}
+
+                if hasattr(self, queue_attr):
+                    queue = getattr(self, queue_attr)
+                    queue.enqueue(task)
+                else:
+                    queue = Queue(plugin)
+                    queue.connect()
+                    setattr(self, queue_attr, queue)
