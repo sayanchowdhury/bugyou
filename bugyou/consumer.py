@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
-#python core imports
+# python core imports
 import ConfigParser
 import os
 from multiprocessing import Process, Manager
 
-#3rd party packages import
+# third party packages import
 import fedmsg.consumers
 from retask import Task
 from retask import Queue

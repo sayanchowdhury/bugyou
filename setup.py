@@ -26,5 +26,5 @@ setup(
         'moksha.consumer': [
             "bugyou_consumer = bugyou.consumer:BugyouConsumer",
         ],
-   },
+    },
 )
