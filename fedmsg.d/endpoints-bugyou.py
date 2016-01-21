@@ -25,10 +25,7 @@ config = dict(
     # messages.  fedmsg.init(...) requires that a 'name' argument be passed
     # to it which corresponds with one of the keys in this dict.
     endpoints={
-        "__main__.%s" % hostname: [
-            "tcp://127.0.0.1:4324",
-        ],
-        "bugyou.%s" % hostname:[
+        "bugyou.%s" % hostname: [
             "tcp://127.0.0.1:4320",
         ],
     },
