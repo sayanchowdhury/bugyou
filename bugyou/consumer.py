@@ -14,11 +14,6 @@ from retask import Queue
 import logging
 log = logging.getLogger("fedmsg")
 
-ISSUE_CONTENT_TEMPLATE = """
-The image {image_name} for the release - {release} failed.
-The output can be seen here - {output_url}
-"""
-
 
 class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
 
@@ -64,14 +59,8 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
                 plugin_queue = task.data['queue_name']
 
                 if plugin_queue not in data['plugin_list']:
-
-                    plugin_list = data['plugin_list']
-                    plugin_list.append(plugin_queue)
-                    data['plugin_list'] = plugin_list
-
-                    topics = list(data['served_topic'])
-                    topics.extend(task.data['topic'])
-                    data['served_topic'] = set(topics)
+                    data['plugin_list'].append(plugin_queue)
+                    data['served_topic'].extend(task.data['topic'])
 
     def consume(self, msg):
         """ This is called when we receive a message matching the topic.
