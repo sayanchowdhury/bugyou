@@ -25,9 +25,14 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
 
         self.load_config()
 
+        log.info("Initializing Plugin list and Topic list")
         self.plugin_list = list()
         self.served_topic = set()
+
+        log.info("Start Listenser")
         self.start_listener()
+
+        log.info("BugyouConsumer is up and ready for action")
 
     def load_config(self):
         name = '/etc/bugyou/bugyou.cfg'
@@ -41,39 +46,47 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
         """ This method creates a process for listening to "instruction" queue
         """
         manager = Manager()
-        self.passing_data = manager.dict({'plugin_list': self.plugin_list,
-                                          'served_topic': self.served_topic})
+        arbiter = manager.dict({'plugin_list': self.plugin_list,
+                                'served_topic': self.served_topic})
+
         proc = Process(target=self.listen_for_instruction,
-                       args=(self.passing_data, ))
+                       args=(arbiter, ))
         proc.start()
 
     @staticmethod
-    def listen_for_instruction(data):
+    def listen_for_instruction(arbiter):
         """ This method listens to instruction queue
         """
         queue = Queue('instruction')
         queue.connect()
         while True:
-            task = queue.wait()
-            if task.data['type'] == 'create':
-                plugin_queue = task.data['queue_name']
+            payload = queue.wait()
+            if payload.data.get('type') == 'create':
+                queue_name = payload.data.get('queue_name')
+                topic = payload.data.get('topic')
 
-                if plugin_queue not in data['plugin_list']:
-                    data['plugin_list'].append(plugin_queue)
+                if not (plugin_queue and topic):
+                    log.debug('Either queue_name or topic is missing')
+                    continue
+
+                if queue_name not in arbiter['plugin_list']:
+                    data['plugin_list'].append(queue_name)
                     data['served_topic'].extend(task.data['topic'])
 
     def consume(self, msg):
         """ This is called when we receive a message matching the topic.
         """
-
         self.served_topic = self.passing_data['served_topic']
         self.plugin_list = self.passing_data['plugin_list']
         topic = msg['body']['topic']
 
         if topic in self.served_topic:
+            log.info('Received a message for the topic({topic})'.format(topic))
             for plugin in self.plugin_list:
-                queue_attr = 'queue-%s' % plugin
-                data = {'topic': topic, 'msg': msg}
+                queue_attr = 'queue-{plugin}'.format(plugin)
+                data = {'topic': topic,
+                        'msg': msg
+                }
 
                 if hasattr(self, queue_attr):
                     queue = getattr(self, queue_attr)
