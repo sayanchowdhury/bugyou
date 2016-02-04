@@ -46,11 +46,11 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
         """ This method creates a process for listening to "instruction" queue
         """
         manager = Manager()
-        arbiter = manager.dict({'plugin_list': self.plugin_list,
+        self.arbiter = manager.dict({'plugin_list': self.plugin_list,
                                 'served_topic': self.served_topic})
 
         proc = Process(target=self.listen_for_instruction,
-                       args=(arbiter, ))
+                       args=(self.arbiter, ))
         proc.start()
 
     @staticmethod
@@ -61,31 +61,36 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
         queue.connect()
         while True:
             payload = queue.wait()
+            print payload
             if payload.data.get('type') == 'create':
                 queue_name = payload.data.get('queue_name')
                 topic = payload.data.get('topic')
 
-                if not (plugin_queue and topic):
+                if not (queue_name and topic):
                     log.debug('Either queue_name or topic is missing')
                     continue
 
+                print queue_name
+
                 if queue_name not in arbiter['plugin_list']:
-                    data['plugin_list'].append(queue_name)
-                    data['served_topic'].extend(task.data['topic'])
+                    arbiter['plugin_list'].append(queue_name)
+                    arbiter['served_topic'].add(payload.data['topic'])
+            print arbiter
 
     def consume(self, msg):
         """ This is called when we receive a message matching the topic.
         """
-        self.served_topic = self.passing_data['served_topic']
-        self.plugin_list = self.passing_data['plugin_list']
+        self.served_topic = self.arbiter['served_topic']
+        self.plugin_list = self.arbiter['plugin_list']
         topic = msg['body']['topic']
 
         if topic in self.served_topic:
             log.info('Received a message for the topic({topic})'.format(topic))
             for plugin in self.plugin_list:
                 queue_attr = 'queue-{plugin}'.format(plugin)
-                data = {'topic': topic,
-                        'msg': msg
+                data = {
+                    'topic': topic,
+                    'msg': msg
                 }
 
                 if hasattr(self, queue_attr):
