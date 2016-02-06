@@ -47,7 +47,7 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
         """
         manager = Manager()
         self.arbiter = manager.dict({'plugin_list': self.plugin_list,
-                                'served_topic': self.served_topic})
+                                     'served_topic': self.served_topic})
 
         proc = Process(target=self.listen_for_instruction,
                        args=(self.arbiter, ))
@@ -73,8 +73,21 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
                 print queue_name
 
                 if queue_name not in arbiter['plugin_list']:
-                    arbiter['plugin_list'].append(queue_name)
-                    arbiter['served_topic'].add(payload.data['topic'])
+                    # Dont shout at me. A/C to the documentation, "Modifications
+                    # to mutable values or items in dict and list proxies will
+                    # not be propagated through the manager, because the proxy
+                    # has no way of knowing when its values or items are
+                    # modified. To modify such an item, you can re-assign the
+                    # modified object to the container proxy"
+
+                    tmp_copy = arbiter['plugin_list']
+                    tmp_copy.append(queue_name)
+                    arbiter['plugin_list'] = tmp_copy
+
+                    tmp_copy = arbiter['served_topic']
+                    tmp_copy.add(payload.data['topic'])
+                    arbiter['served_topic'] = tmp_copy
+
             print arbiter
 
     def consume(self, msg):
