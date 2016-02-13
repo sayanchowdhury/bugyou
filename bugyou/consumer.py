@@ -64,9 +64,10 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
             print payload
             if payload.data.get('type') == 'create':
                 queue_name = payload.data.get('queue_name')
-                topic = payload.data.get('topic')
+                topics = payload.data.get('topic')
+                topics = {topic.strip() for topic in topics.split(',')}
 
-                if not (queue_name and topic):
+                if not (queue_name and topics):
                     log.debug('Either queue_name or topic is missing')
                     continue
 
@@ -85,7 +86,7 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
                     arbiter['plugin_list'] = tmp_copy
 
                     tmp_copy = arbiter['served_topic']
-                    tmp_copy.add(payload.data['topic'])
+                    tmp_copy = tmp_copy | topics
                     arbiter['served_topic'] = tmp_copy
 
             print arbiter
@@ -95,17 +96,17 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
         """
         self.served_topic = self.arbiter['served_topic']
         self.plugin_list = self.arbiter['plugin_list']
-        topic = msg['body']['topic']
+        topic = msg['topic']
 
         if topic in self.served_topic:
-            log.info('Received a message for the topic({topic})'.format(topic))
+            log.info('Received a message for the topic({topic})'.format(topic=topic))
             for plugin in self.plugin_list:
-                queue_attr = 'queue-{plugin}'.format(plugin)
+                queue_attr = 'queue-{plugin}'.format(plugin=plugin)
                 data = {
                     'topic': topic,
                     'msg': msg
                 }
-
+                task = Task(data)
                 if hasattr(self, queue_attr):
                     queue = getattr(self, queue_attr)
                     queue.enqueue(task)
