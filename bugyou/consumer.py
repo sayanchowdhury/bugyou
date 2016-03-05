@@ -25,8 +25,8 @@ from multiprocessing import Process, Manager
 
 # third party packages import
 import fedmsg.consumers
-from retask import Task
-from retask import Queue
+from retask.task import Task
+from retask.queue import Queue
 
 # logging
 import logging
