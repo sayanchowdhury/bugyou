@@ -36,6 +36,7 @@ This file primary contains the data required to use a particular service such
 as API Key, repository name etc.
 
 ::
+
     [<plugin_name>_<service_name>]
     repo_name = <name of the repository>
     access_token = <access_token>
