@@ -1,26 +1,21 @@
-.. bugyou documentation master file, created by
-   sphinx-quickstart on Wed Dec  2 15:43:47 2015.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+Bugyou Documentation
+====================
 
-Welcome to bugyou's documentation!
-==================================
+Bugyou is a service which listens to fedmsg messages and interacts with the
+issue tracking tools through an API.
 
-Bugyou files issues for failed tests from autocloud. It's part of Fedora Project where it
-listens to autocloud messages from fedmsg and files bug for images which have
-failed the tests. Bugyou keeps updating the status of the images in the bug and
-closes the issue once the tests are successful.
 
-Contents:
+Table of Contents
+-----------------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 0
 
-   building
-   setup
-   design
-
-
+   overview
+   development
+   configuration
+   plugin
+   services
 
 Indices and tables
 ==================
