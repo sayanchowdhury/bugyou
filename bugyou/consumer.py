@@ -34,14 +34,17 @@ log = logging.getLogger("fedmsg")
 
 
 class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
+    """
+    BugyouConsumer consumes the messages from fedmsg. The consumer listens to
+    all the incoming messages from fedmsg and routes the messages to the plugin
+    queues based on the served topic
+    """
 
     topic = ['*']
     config_key = 'bugyou.consumer.enabled'
 
     def __init__(self, *args, **kwargs):
         super(BugyouConsumer, self).__init__(*args, **kwargs)
-
-        self.load_config()
 
         log.info("Initializing Plugin list and Topic list")
         self.plugin_list = list()
@@ -52,16 +55,10 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
 
         log.info("BugyouConsumer is up and ready for action")
 
-    def load_config(self):
-        name = '/etc/bugyou/bugyou.cfg'
-        if not os.path.exists(name):
-            raise Exception('Please add a proper cofig file under /etc/bugyou')
-
-        self.config = ConfigParser.RawConfigParser()
-        self.config.read(name)
-
     def start_listener(self):
-        """ This method creates a process for listening to "instruction" queue
+        """ This method creates a process for listening to "instruction" queue.
+        The instruction queue is used to track new plugins that are added to
+        bugyou_plugins.
         """
         manager = Manager()
         self.arbiter = manager.dict({'plugin_list': self.plugin_list,
@@ -79,7 +76,8 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
         queue.connect()
         while True:
             payload = queue.wait()
-            print payload
+            log.info("Instruction queue received a new plugin")
+
             if payload.data.get('type') == 'create':
                 queue_name = payload.data.get('queue_name')
                 topics = payload.data.get('topic')
@@ -88,8 +86,6 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
                 if not (queue_name and topics):
                     log.debug('Either queue_name or topic is missing')
                     continue
-
-                print queue_name
 
                 if queue_name not in arbiter['plugin_list']:
                     # Dont shout at me. A/C to the documentation, "Modifications
@@ -106,8 +102,7 @@ class BugyouConsumer(fedmsg.consumers.FedmsgConsumer):
                     tmp_copy = arbiter['served_topic']
                     tmp_copy = tmp_copy | topics
                     arbiter['served_topic'] = tmp_copy
-
-            print arbiter
+                    log.debug("Arbiter is updated")
 
     def consume(self, msg):
         """ This is called when we receive a message matching the topic.
